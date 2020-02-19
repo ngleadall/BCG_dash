@@ -16,7 +16,7 @@ app.layout = html.Div(children=[
     html.H1(children='BGC UKBBv2 Validation Status'),
     html.Div(children=[
         dcc.Tabs(id='tabs', children=[
-            dcc.Tab(label='Explore', children=[
+            dcc.Tab(label='Panel Status', children=[
                 html.Div(
                     className="container",
                     style={
@@ -40,8 +40,7 @@ app.layout = html.Div(children=[
                         }
                     )])
             ]),
-            dcc.Tab(label='Explore', children=[]),
-            dcc.Tab(label='Explore', children=[
+            dcc.Tab(label='Antigens Collected', children=[
                 html.Div(
                     className="container",
                     style={
@@ -65,8 +64,8 @@ app.layout = html.Div(children=[
                         }
                     )])
             ]),
-            dcc.Tab(label='Explore', children=[]),
-            dcc.Tab(label='Explore', children=[])
+            dcc.Tab(label='Sample Status', children=[]),
+            dcc.Tab(label='Sample QC', children=[])
 
         ])
     ])
