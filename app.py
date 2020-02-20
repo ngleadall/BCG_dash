@@ -10,13 +10,44 @@ from dash.dependencies import Input, Output, State
 
 # Data importing
 
+
 # App setup + stylesheets
 external_stylesheets = [dbc.themes.BOOTSTRAP]
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
+# Handle data input
 
+
+def format_df():
+    ''' 
+    takes data input and formats it
+    '''
+
+    df = pd.read_excel('./static/data/web_test.data.xlsx', sheet_name=0)
+
+    # Check if DNA extracted
+    df['DNA_extracted'] = df['date_dna_extracted'].apply(
+        lambda x: 1 if pd.notna(x) else 0)
+
+    # Check if Genotyped
+    df['genotyped'] = df['date_sent_for_genotype'].apply(
+        lambda x: 1 if pd.notna(x) else 0)
+
+    # Check if Data returned
+    df['data_returned'] = df['best_array'].apply(
+        lambda x: 1 if pd.notna(x) else 0)
+
+    return(df)
+
+
+df = format_df()
+
+#######################################
 # Functions
+#######################################
+
+
 def generate_header():
     '''
     makes the page header
@@ -65,7 +96,7 @@ def generate_info_card(card_title, card_content):
                     inverse=True,)
 
 
-def generate_info_row():
+def generate_info_row(t_samples, t_dna, t_genotyped, t_returned):
     '''
     generates summary statistics row
     '''
@@ -73,10 +104,10 @@ def generate_info_row():
     return html.Div([
         dbc.Container([
             dbc.CardDeck([
-                generate_info_card("Total Samples", "0"),
-                generate_info_card("DNA Extracted", "0"),
-                generate_info_card("Genotyped", "0"),
-                generate_info_card("Data Returned", "0")
+                generate_info_card("Total Samples", t_samples),
+                generate_info_card("DNA Extracted", t_dna),
+                generate_info_card("Genotyped", t_genotyped),
+                generate_info_card("Data Returned", t_returned)
             ])
         ])
     ], style={'padding-top': '15px',
@@ -92,7 +123,11 @@ server = app.server
 # Layout
 app.layout = html.Div(children=[
     generate_header(),
-    generate_info_row(),
+    generate_info_row(len(df),
+                      df['DNA_extracted'].sum(),
+                      df['genotyped'].sum(),
+                      df['data_returned'].sum()
+                      ),
     dcc.Tabs(id="tabs", value='tab-1', children=[
         dcc.Tab(label='Collection Targets', value='tab-1'),
         dcc.Tab(label='Antigens collected', value='tab-2'),
@@ -114,6 +149,8 @@ def render_content(tab):
     if tab == 'tab-3':
         return html.Div(children=['I am div 3!'])
     if tab == 'tab-4':
+        return html.Div(children=['I am div 4!'])
+        return html.Div(children=['I am div 4!'])
         return html.Div(children=['I am div 4!'])
 
 
