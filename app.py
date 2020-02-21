@@ -6,21 +6,21 @@ import dash
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 import dash_html_components as html
+import plotly.graph_objs as go
 from dash.dependencies import Input, Output, State
-
-# Data importing
-
 
 # App setup + stylesheets
 external_stylesheets = [dbc.themes.BOOTSTRAP]
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-# Handle data input
+#######################################
+# Data inputting
+#######################################
 
 
-def format_df():
-    ''' 
+def import_main_data():
+    '''
     takes data input and formats it
     '''
 
@@ -38,10 +38,28 @@ def format_df():
     df['data_returned'] = df['best_array'].apply(
         lambda x: 1 if pd.notna(x) else 0)
 
+    # Check if failing
+    # Check if Data returned
+    df['failed'] = df['sample_status'].apply(
+        lambda x: 1 if x == "Fail" else 0)
+
     return(df)
 
 
-df = format_df()
+df = import_main_data()
+
+
+def import_targets():
+    '''
+    imports targets for each partner
+    '''
+    df = pd.read_excel('./static/data/target_numbers.data.xlsx', sheet_name=0)
+
+    return(df)
+
+
+targets_df = import_targets()
+
 
 #######################################
 # Functions
@@ -73,6 +91,8 @@ def generate_header():
         color="dark",
         dark=True,
     )
+
+ # SAMPLE SUMMARY
 
 
 def generate_info_card(card_title, card_content):
@@ -109,12 +129,96 @@ def generate_info_row(t_samples, t_dna, t_genotyped, t_returned):
                 generate_info_card("Genotyped", t_genotyped),
                 generate_info_card("Data Returned", t_returned)
             ])
-        ])
+        ], fluid=True)
     ], style={'padding-top': '15px',
               'padding-bottom': '15px',
               'text-align': 'center',
               }
     )
+
+# SAMPLE PANEL
+
+
+def sample_status_plot():
+    '''
+    Generates the sample status plot
+    '''
+
+    current_status = df[['cohort', 'DNA_extracted', 'genotyped',
+                         'data_returned', 'failed']].groupby('cohort', as_index=False).sum()
+
+    return dcc.Graph(id='sample_status_plot',
+                     figure={
+                        'data': [{
+                            'x': current_status['cohort'],
+                            'y': current_status['DNA_extracted'],
+                            'type': 'bar',
+                            'name': u'DNA extracted'
+                        },
+                            {
+                            'x': current_status['cohort'],
+                            'y': current_status['genotyped'],
+                            'type': 'bar',
+                            'name': u'Sent for genotyping'
+                        }, {
+                            'x': current_status['cohort'],
+                            'y': current_status['data_returned'],
+                            'type': 'bar',
+                            'name': u'Data returned'
+                        }, {
+                            'x': current_status['cohort'],
+                            'y': current_status['failed'],
+                            'type': 'bar',
+                            'name': u'Failed samples'
+                        }],
+                         'layout': dict(
+                             title={'text': 'Sample Status Summary'},
+                             xaxis={'title': 'Partner'},
+                             yaxis={'title': 'Sample count'},
+                             legend=dict(orientation='v', y=0.5)
+                        )
+                     })
+
+
+def sample_target_plot():
+
+    counts = df['cohort'].value_counts().rename_axis(
+        'Partner').reset_index(name='counts')
+
+    return dcc.Graph(id='sample_target_plot',
+                     figure={
+                         'data': [{
+                             'x': targets_df['Partner'],
+                             'y': targets_df['Target'],
+                             'type':'bar',
+                             'name':'Collection target'
+                         }, {
+                             'x': counts['Partner'],
+                             'y': counts['counts'],
+                             'type':'bar',
+                             'name':'Collected'
+                         }],
+                         'layout': dict(
+                             title={'text': 'Collection status'},
+                             xaxis={'title': 'Partner'},
+                             yaxis={'title': 'Sample count'},
+                             legend=dict(orientation='v', y=0.5)
+                         )
+                     }
+                     )
+
+
+def generate_sample_panel_tab():
+    '''
+    generates the content for tab 1. Sample panels
+    '''
+
+    return html.Div([
+        dbc.Container([
+            sample_target_plot(),
+            sample_status_plot()
+        ])
+    ])
 
 
 # Server
@@ -143,16 +247,15 @@ app.layout = html.Div(children=[
               [Input('tabs', 'value')])
 def render_content(tab):
     if tab == 'tab-1':
-        return html.Div(children=['I am div 1!'])
+        return generate_sample_panel_tab()
     if tab == 'tab-2':
         return html.Div(children=['I am div 2!'])
     if tab == 'tab-3':
         return html.Div(children=['I am div 3!'])
     if tab == 'tab-4':
         return html.Div(children=['I am div 4!'])
-        return html.Div(children=['I am div 4!'])
-        return html.Div(children=['I am div 4!'])
 
 
 if __name__ == '__main__':
+    # sample_target_plot()
     app.run_server(debug=True)
