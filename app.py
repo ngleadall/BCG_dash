@@ -363,8 +363,8 @@ def generate_qc_panel_tab():
             dbc.Row([
                 dbc.Col(generate_dqc_CR_plot()),
                 dbc.Col(generate_cr_het_plot())
-            ], align="center")
-        ])
+            ])
+        ], fluid=True)
     ])
 
 
