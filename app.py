@@ -275,14 +275,14 @@ def generate_sample_panel_tab():
 ###########################
 
 
-def generate_pico_CR_plot():
+def generate_dqc_CR_plot():
     '''
-    Generates dqc green vs callrate plot
+    Generates dqc vs callrate plot
     '''
 
     plot_d = df[['ID', 'cohort', 'Cluster_CR', 'dQC', 'sample_status']]
 
-    return dcc.Graph(id='pico_v_callrate',
+    return dcc.Graph(id='dqc_v_cr_plot',
                      figure={
                          'data': [
                              dict(
@@ -294,7 +294,7 @@ def generate_pico_CR_plot():
                                  mode='markers',
                                  opacity=0.7,
                                  marker={
-                                     'size': 15,
+                                     'size': 10,
                                      'line': {'width': 0.5, 'color': 'white'}
                                  },
                                  name=i
@@ -303,7 +303,44 @@ def generate_pico_CR_plot():
                          'layout': dict(
                              title={'text': 'Cluster call rate vs. Dish QC'},
                              xaxis={'title': 'Dish QC'},
-                             yaxis={'title': 'Cluster call rate'},
+                             yaxis={'title': 'Cluster call rate (%)'},
+                             legend=dict(orientation='v', y=0.5),
+                             hovermode='closest'
+
+                         )
+                     })
+
+
+def generate_cr_het_plot():
+    '''
+    plots cr vs het rate
+    '''
+    plot_d = df[['ID', 'cohort', 'Cluster_CR', 'het_rate', 'sample_status']]
+
+    return dcc.Graph(id='cr_v_het_plot',
+                     figure={
+                         'data': [
+                             dict(
+                                 x=plot_d[plot_d['sample_status']
+                                          == i]['het_rate'],
+                                 y=plot_d[plot_d['sample_status']
+                                          == i]['Cluster_CR'],
+                                 text=plot_d[plot_d['sample_status']
+                                             == i]['ID'],
+                                 mode='markers',
+                                 opacity=0.7,
+                                 marker={
+                                     'size': 10,
+                                     'line': {'width': 0.5, 'color': 'white'}
+                                 },
+                                 name=i
+                             ) for i in df.sample_status.unique()
+                         ],
+                         'layout': dict(
+                             title={
+                                 'text': 'Cluster call rate vs. Heterozygosity'},
+                             xaxis={'title': 'Heterozygosity (%)'},
+                             yaxis={'title': 'Cluster call rate (%)'},
                              legend=dict(orientation='v', y=0.5),
                              hovermode='closest'
 
@@ -318,7 +355,8 @@ def generate_qc_panel_tab():
 
     return html.Div([
         dbc.Container([
-            generate_pico_CR_plot()
+            generate_dqc_CR_plot(),
+            generate_cr_het_plot()
         ])
     ])
 
