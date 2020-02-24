@@ -188,7 +188,8 @@ def sample_status_plot():
                              title={'text': 'Sample Status Summary'},
                              xaxis={'title': 'Partner'},
                              yaxis={'title': 'Sample count'},
-                             legend=dict(orientation='v', y=0.5)
+                             legend=dict(orientation='v', y=0.5),
+                             hovermode='closest'
                          )
                      })
 
@@ -215,7 +216,8 @@ def sample_target_plot():
                              title={'text': 'Collection status'},
                              xaxis={'title': 'Partner'},
                              yaxis={'title': 'Sample count'},
-                             legend=dict(orientation='v', y=0.5)
+                             legend=dict(orientation='v', y=0.5),
+                             hovermode='closest'
                          )
                      }
                      )
@@ -243,6 +245,7 @@ def antigen_target_plot():
                              xaxis={'title': 'Antigen'},
                              yaxis={'title': 'Sample count'},
                              legend=dict(orientation='v', y=0.5),
+                             hovermode='closest'
 
                          )
                      }
@@ -277,15 +280,34 @@ def generate_pico_CR_plot():
     Generates dqc green vs callrate plot
     '''
 
-    plot_d = df[['ID', 'cohort', 'Cluster_CR', 'dQC']]
+    plot_d = df[['ID', 'cohort', 'Cluster_CR', 'dQC', 'sample_status']]
 
     return dcc.Graph(id='pico_v_callrate',
                      figure={
-                         'data': [{'x': plot_d['dQC'],
-                                   'y': plot_d['Cluster_CR'],
-                                   'text': plot_d['ID'],
-                                   'mode':'markers'
-                                   }]
+                         'data': [
+                             dict(
+                                 x=plot_d[plot_d['sample_status'] == i]['dQC'],
+                                 y=plot_d[plot_d['sample_status']
+                                          == i]['Cluster_CR'],
+                                 text=plot_d[plot_d['sample_status']
+                                             == i]['ID'],
+                                 mode='markers',
+                                 opacity=0.7,
+                                 marker={
+                                     'size': 15,
+                                     'line': {'width': 0.5, 'color': 'white'}
+                                 },
+                                 name=i
+                             ) for i in df.sample_status.unique()
+                         ],
+                         'layout': dict(
+                             title={'text': 'Cluster call rate vs. Dish QC'},
+                             xaxis={'title': 'Dish QC'},
+                             yaxis={'title': 'Cluster call rate'},
+                             legend=dict(orientation='v', y=0.5),
+                             hovermode='closest'
+
+                         )
                      })
 
 
