@@ -61,6 +61,19 @@ def import_targets():
 targets_df = import_targets()
 
 
+def import_antigen_counts():
+    '''
+    imports data for antigen counts
+    '''
+    df = pd.read_csv('./static/data/Antigen_data_counts.csv')
+    df = df.rename(columns={"Unnamed: 0": "posneg"})
+    df = df.set_index('posneg').T.reset_index()
+
+    return(df)
+
+
+antigen_counts = import_antigen_counts()
+
 #######################################
 # Functions
 #######################################
@@ -149,34 +162,34 @@ def sample_status_plot():
 
     return dcc.Graph(id='sample_status_plot',
                      figure={
-                        'data': [{
-                            'x': current_status['cohort'],
-                            'y': current_status['DNA_extracted'],
-                            'type': 'bar',
-                            'name': u'DNA extracted'
-                        },
-                            {
-                            'x': current_status['cohort'],
-                            'y': current_status['genotyped'],
-                            'type': 'bar',
-                            'name': u'Sent for genotyping'
-                        }, {
-                            'x': current_status['cohort'],
-                            'y': current_status['data_returned'],
-                            'type': 'bar',
-                            'name': u'Data returned'
-                        }, {
-                            'x': current_status['cohort'],
-                            'y': current_status['failed'],
-                            'type': 'bar',
-                            'name': u'Failed samples'
-                        }],
+                         'data': [{
+                             'x': current_status['cohort'],
+                             'y': current_status['DNA_extracted'],
+                             'type': 'bar',
+                             'name': u'DNA extracted'
+                         },
+                             {
+                             'x': current_status['cohort'],
+                             'y': current_status['genotyped'],
+                             'type': 'bar',
+                             'name': u'Sent for genotyping'
+                         }, {
+                             'x': current_status['cohort'],
+                             'y': current_status['data_returned'],
+                             'type': 'bar',
+                             'name': u'Data returned'
+                         }, {
+                             'x': current_status['cohort'],
+                             'y': current_status['failed'],
+                             'type': 'bar',
+                             'name': u'Failed samples'
+                         }],
                          'layout': dict(
                              title={'text': 'Sample Status Summary'},
                              xaxis={'title': 'Partner'},
                              yaxis={'title': 'Sample count'},
                              legend=dict(orientation='v', y=0.5)
-                        )
+                         )
                      })
 
 
@@ -208,6 +221,34 @@ def sample_target_plot():
                      )
 
 
+def antigen_target_plot():
+
+    counts = antigen_counts
+
+    return dcc.Graph(id='antigen_count_plot',
+                     figure={
+                         'data': [{
+                             'x': counts['index'],
+                             'y': counts['+'],
+                             'type':'bar',
+                             'name':'+ive'
+                         }, {
+                             'x': counts['index'],
+                             'y': counts['-'],
+                             'type':'bar',
+                             'name':'-ive',
+                         }],
+                         'layout': dict(
+                             title={'text': 'Antigen Collection Status'},
+                             xaxis={'title': 'Antigen'},
+                             yaxis={'title': 'Sample count'},
+                             legend=dict(orientation='v', y=0.5),
+
+                         )
+                     }
+                     )
+
+
 def generate_sample_panel_tab():
     '''
     generates the content for tab 1. Sample panels
@@ -215,8 +256,47 @@ def generate_sample_panel_tab():
 
     return html.Div([
         dbc.Container([
-            sample_target_plot(),
-            sample_status_plot()
+            dbc.Row([
+                dbc.Col(sample_target_plot()),
+                dbc.Col(sample_status_plot())
+            ], align="center"),
+        ], fluid=True),
+        dbc.Container([
+            antigen_target_plot()
+        ], fluid=True)
+
+    ])
+
+###########################
+# QC tab
+###########################
+
+
+def generate_pico_CR_plot():
+    '''
+    Generates dqc green vs callrate plot
+    '''
+
+    plot_d = df[['ID', 'cohort', 'Cluster_CR', 'dQC']]
+
+    return dcc.Graph(id='pico_v_callrate',
+                     figure={
+                         'data': [{'x': plot_d['dQC'],
+                                   'y': plot_d['Cluster_CR'],
+                                   'text': plot_d['ID'],
+                                   'mode':'markers'
+                                   }]
+                     })
+
+
+def generate_qc_panel_tab():
+    '''
+    generates the content for tab 2. Sample QC
+    '''
+
+    return html.Div([
+        dbc.Container([
+            generate_pico_CR_plot()
         ])
     ])
 
@@ -234,9 +314,7 @@ app.layout = html.Div(children=[
                       ),
     dcc.Tabs(id="tabs", value='tab-1', children=[
         dcc.Tab(label='Collection Targets', value='tab-1'),
-        dcc.Tab(label='Antigens collected', value='tab-2'),
-        dcc.Tab(label='Sample Table', value='tab-3'),
-        dcc.Tab(label='Sample QC', value='tab-4'),
+        dcc.Tab(label='Sample QC', value='tab-2'),
     ]),
     html.Div(id='tabs-content')
 
@@ -249,13 +327,9 @@ def render_content(tab):
     if tab == 'tab-1':
         return generate_sample_panel_tab()
     if tab == 'tab-2':
-        return html.Div(children=['I am div 2!'])
-    if tab == 'tab-3':
-        return html.Div(children=['I am div 3!'])
-    if tab == 'tab-4':
-        return html.Div(children=['I am div 4!'])
+        return generate_qc_panel_tab()
 
 
 if __name__ == '__main__':
-    # sample_target_plot()
+    # print("I am working!")
     app.run_server(debug=True)
