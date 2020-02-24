@@ -305,7 +305,9 @@ def generate_dqc_CR_plot():
                              xaxis={'title': 'Dish QC'},
                              yaxis={'title': 'Cluster call rate (%)'},
                              legend=dict(orientation='v', y=0.5),
-                             hovermode='closest'
+                             hovermode='closest',
+                             width=500,
+                             height=500
 
                          )
                      })
@@ -342,7 +344,10 @@ def generate_cr_het_plot():
                              xaxis={'title': 'Heterozygosity (%)'},
                              yaxis={'title': 'Cluster call rate (%)'},
                              legend=dict(orientation='v', y=0.5),
-                             hovermode='closest'
+                             hovermode='closest',
+                             autosize=True,
+                             width=500,
+                             height=500,
 
                          )
                      })
@@ -355,8 +360,10 @@ def generate_qc_panel_tab():
 
     return html.Div([
         dbc.Container([
-            generate_dqc_CR_plot(),
-            generate_cr_het_plot()
+            dbc.Row([
+                dbc.Col(generate_dqc_CR_plot()),
+                dbc.Col(generate_cr_het_plot())
+            ], align="center")
         ])
     ])
 
