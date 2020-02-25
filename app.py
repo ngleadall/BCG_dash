@@ -351,13 +351,13 @@ def generate_cr_het_plot():
                              legend=dict(orientation='v', y=0.5),
                              hovermode='closest',
                              autosize=True,
-
+                             width=500,
+                             height=500,
 
                          )
                      })
 
 
-<<<<<<< HEAD
 def generate_failed_samples_table():
     '''
     Generates table of failed samples
@@ -408,25 +408,6 @@ def generate_failed_samples_table():
     )
 
 
-
-def generate_fail_table():
-    '''
-    lists fail samples
-    '''
-    return dash_table.DataTable(
-        id='table',
-        columns=[
-            {'name': 'Column 1', 'id': 'column1'},
-            {'name': 'Column 2', 'id': 'column2'},
-            {'name': 'Column 3', 'id': 'column3'},
-            {'name': 'Column 4', 'id': 'column4'},
-            {'name': 'Column 5', 'id': 'column5'}]
-    )
-
-
-, and then send in a dict of your pan
-
-
 def generate_qc_panel_tab():
     '''
     generates the content for tab 2. Sample QC
@@ -443,8 +424,6 @@ def generate_qc_panel_tab():
         generate_failed_samples_table()
 
     ], fluid=True)
-    ]), html.Div([
-        generate_fail_table()
     ])
 
 
