@@ -168,9 +168,9 @@ def generate_info_row(t_samples, t_dna, t_genotyped, t_returned):
               'text-align': 'center',
               }
     )
-
+#####################
 # SAMPLE PANEL
-
+#####################
 
 def sample_status_plot():
     '''
@@ -318,8 +318,8 @@ def generate_dqc_CR_plot():
                              legend=dict(orientation='v', y=0.5),
                              hovermode='closest',
                              width=500,
-                             height=500
-
+                             height=500,
+                             autosize=True
                          )
                      })
 
@@ -352,8 +352,7 @@ def generate_cr_het_plot():
                              hovermode='closest',
                              autosize=True,
                              width=500,
-                             height=500,
-
+                             height=500
                          )
                      })
 
@@ -368,10 +367,10 @@ def generate_failed_samples_table():
         "Cohort",
         "Pico green",
         "CV%",
-        "dish QC",
-        "Cluster CR",
         "Heterozygosity rate",
+        "dish QC",
         "Sex check",
+        "Cluster CR",
         "BP failure mode",
         "Sample status"
     ]
@@ -381,11 +380,11 @@ def generate_failed_samples_table():
         "cohort",
         "pico_green",
         "CV%",
+        "het_rate",
         "dQC",
         "Cluster_CR",
-        "het_rate",
-        "sex_check",
         "Failure_Mode",
+        "sex_check",
         "sample_status",
     ]]
 
@@ -395,8 +394,8 @@ def generate_failed_samples_table():
         "pico_green": "Pico green",
         "CV%": "CV%",
         "dQC": "dish QC",
-        "Cluster_CR": "Cluster CR",
         "het_rate": "Heterozygosity rate",
+        "Cluster_CR": "Cluster CR",    
         "sex_check": "Sex check",
         "Failure_Mode": "BP failure mode",
         "sample_status": "Sample status"})
@@ -404,8 +403,41 @@ def generate_failed_samples_table():
     return dash_table.DataTable(
         id='table',
         columns=[{"name": i, "id": i} for i in columns],
-        data=d.loc[d['Sample status'] == "Fail"].to_dict('records'),
-    )
+        data=d.loc[d['Sample status'] == "Fail"].sort_values(by=['Cohort']).to_dict('records'),
+        style_cell={
+            'padding': '5px',
+            'textAlign': 'center',
+            'border': '1px solid black'
+        },
+        style_header={
+        'backgroundColor': 'rgb(230, 230, 230)',
+        'fontWeight': 'bold',
+        'border': '1px solid black'
+        },
+        style_data_conditional=[
+            {'if': {
+                'column_id': 'Sex check',
+                'filter_query':'{Sex check} eq "Fail"'
+            },
+            'backgroundColor': '#ff9b9e',
+            'fontWeight':'bold'},
+            {
+                'if': {
+                'column_id': 'dish QC',
+                'filter_query':'{dish QC} < 0.82'
+            },
+            'backgroundColor': '#ff9b9e',
+            'fontWeight':'bold'
+            },
+            {
+                'if': {
+                'column_id': 'Cluster CR',
+                'filter_query':'{Cluster CR} < 97.0'
+            },
+            'backgroundColor': '#ff9b9e',
+            'fontWeight':'bold'
+            }
+        ])
 
 
 def generate_qc_panel_tab():
@@ -419,13 +451,21 @@ def generate_qc_panel_tab():
                 dbc.Col(generate_dqc_CR_plot()),
                 dbc.Col(generate_cr_het_plot())
             ])
-        ], fluid=True)
-    ]), html.Div([dbc.Container([
+        ])
+    ]), html.Div([
+        html.H4(children='Failed samples'),
+        dbc.Container([
         generate_failed_samples_table()
-
     ], fluid=True)
-    ])
+    ],style={'padding-top': '15px',
+               'padding-bottom': '15px',
+               'padding-right': '30px',
+               'padding-left': '30px'
+             })
 
+####################################
+# Main App
+####################################
 
 # Server
 server = app.server
