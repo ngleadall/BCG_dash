@@ -408,7 +408,7 @@ def generate_failed_samples_table():
     )
 
 
-=======
+
 def generate_fail_table():
     '''
     lists fail samples
@@ -427,7 +427,6 @@ def generate_fail_table():
 , and then send in a dict of your pan
 
 
->>>>>>> 2353bcd8cd5bb343fd0f4815587b404bfae97506
 def generate_qc_panel_tab():
     '''
     generates the content for tab 2. Sample QC
@@ -440,15 +439,12 @@ def generate_qc_panel_tab():
                 dbc.Col(generate_cr_het_plot())
             ])
         ], fluid=True)
-<<<<<<< HEAD
     ]), html.Div([dbc.Container([
         generate_failed_samples_table()
 
     ], fluid=True)
-=======
     ]), html.Div([
         generate_fail_table()
->>>>>>> 2353bcd8cd5bb343fd0f4815587b404bfae97506
     ])
 
 
