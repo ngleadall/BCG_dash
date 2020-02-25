@@ -6,6 +6,7 @@ import dash
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 import dash_html_components as html
+import dash_table
 import plotly.graph_objs as go
 from dash.dependencies import Input, Output, State
 
@@ -346,11 +347,28 @@ def generate_cr_het_plot():
                              legend=dict(orientation='v', y=0.5),
                              hovermode='closest',
                              autosize=True,
-                             width=500,
-                             height=500,
+
 
                          )
                      })
+
+
+def generate_fail_table():
+    '''
+    lists fail samples
+    '''
+    return dash_table.DataTable(
+        id='table',
+        columns=[
+            {'name': 'Column 1', 'id': 'column1'},
+            {'name': 'Column 2', 'id': 'column2'},
+            {'name': 'Column 3', 'id': 'column3'},
+            {'name': 'Column 4', 'id': 'column4'},
+            {'name': 'Column 5', 'id': 'column5'}]
+    )
+
+
+, and then send in a dict of your pan
 
 
 def generate_qc_panel_tab():
@@ -365,6 +383,8 @@ def generate_qc_panel_tab():
                 dbc.Col(generate_cr_het_plot())
             ])
         ], fluid=True)
+    ]), html.Div([
+        generate_fail_table()
     ])
 
 
