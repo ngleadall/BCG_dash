@@ -469,7 +469,7 @@ def generate_qc_panel_tab():
             ])
         ])
     ]), html.Div([
-        html.H4(children='Failed samples'),
+        html.H4(children='Table browser'),
         dbc.Container([
             generate_failed_samples_table()
         ], fluid=True)
