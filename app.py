@@ -14,7 +14,7 @@ from dash.dependencies import Input, Output, State
 external_stylesheets = [dbc.themes.BOOTSTRAP]
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-app.title = 'BGC Validation Dashboard'
+app.title = 'BGC Accreditation Dashboard'
 #######################################
 # Data inputting
 #######################################
@@ -113,7 +113,7 @@ def generate_header():
                     [
                         dbc.Col(html.Img(src=LOGO, height="50px")),
                         dbc.Col(dbc.NavbarBrand(
-                            "Accreditation Project Dashboard", className="ml-2", style={'padding-top': '10px'})),
+                            "Accreditation Dashboard", className="ml-2", style={'padding-top': '10px'})),
                     ],
                     align="center",
                     no_gutters=True,
