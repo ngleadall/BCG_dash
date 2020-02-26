@@ -44,6 +44,25 @@ def import_main_data():
     df['failed'] = df['sample_status'].apply(
         lambda x: 1 if x == "Fail" else 0)
 
+    def sex_check(submitted, inferred):
+
+        submitted = str(submitted)
+        inferred = str(inferred)
+
+        accepted_sex = ["Male", "Female"]
+        if submitted not in accepted_sex or inferred not in accepted_sex:
+            return("NaN")
+        if submitted == inferred:
+            return("Pass")
+        else:
+            return("Fail")
+
+    # sex check
+    df['sex_check'] = df.apply(
+        lambda x: sex_check(x.Submitted_sex, x.Inferred_sex), axis=1)
+    df['sample_status'] = df['sex_check'].apply(
+        lambda x: "Fail" if x != "Pass" else x)
+
     return(df)
 
 
@@ -149,8 +168,9 @@ def generate_info_row(t_samples, t_dna, t_genotyped, t_returned):
               'text-align': 'center',
               }
     )
-
+#####################
 # SAMPLE PANEL
+#####################
 
 
 def sample_status_plot():
@@ -268,7 +288,6 @@ def generate_sample_panel_tab():
         dbc.Container([
             antigen_target_plot()
         ], fluid=True)
-
     ])
 
 ###########################
@@ -276,30 +295,23 @@ def generate_sample_panel_tab():
 ###########################
 
 
-def generate_dqc_CR_plot():
+def generate_dqc_CR_plot(data_frame):
     '''
     Generates dqc vs callrate plot
     '''
-
-    plot_d = df[['ID', 'cohort', 'Cluster_CR', 'dQC', 'sample_status']]
-
     return dcc.Graph(id='dqc_v_cr_plot',
                      figure={
                          'data': [
                              dict(
-                                 x=plot_d[plot_d['sample_status'] == i]['dQC'],
-                                 y=plot_d[plot_d['sample_status']
-                                          == i]['Cluster_CR'],
-                                 text=plot_d[plot_d['sample_status']
-                                             == i]['ID'],
+                                 x=data_frame[data_frame['sample_status']
+                                              == i]['dQC'],
+                                 y=data_frame[data_frame['sample_status']
+                                              == i]['Cluster_CR'],
+                                 text=data_frame[data_frame['sample_status']
+                                                 == i]['ID'],
                                  mode='markers',
-                                 opacity=0.7,
-                                 marker={
-                                     'size': 10,
-                                     'line': {'width': 0.5, 'color': 'white'}
-                                 },
                                  name=i
-                             ) for i in df.sample_status.unique()
+                             ) for i in data_frame.sample_status.unique()
                          ],
                          'layout': dict(
                              title={'text': 'Cluster call rate vs. Dish QC'},
@@ -308,36 +320,30 @@ def generate_dqc_CR_plot():
                              legend=dict(orientation='v', y=0.5),
                              hovermode='closest',
                              width=500,
-                             height=500
-
+                             height=500,
+                             autosize=True
                          )
                      })
 
 
-def generate_cr_het_plot():
+def generate_cr_het_plot(data_frame):
     '''
     plots cr vs het rate
     '''
-    plot_d = df[['ID', 'cohort', 'Cluster_CR', 'het_rate', 'sample_status']]
 
     return dcc.Graph(id='cr_v_het_plot',
                      figure={
                          'data': [
                              dict(
-                                 x=plot_d[plot_d['sample_status']
-                                          == i]['het_rate'],
-                                 y=plot_d[plot_d['sample_status']
-                                          == i]['Cluster_CR'],
-                                 text=plot_d[plot_d['sample_status']
-                                             == i]['ID'],
+                                 x=data_frame[data_frame['sample_status']
+                                              == i]['het_rate'],
+                                 y=data_frame[data_frame['sample_status']
+                                              == i]['Cluster_CR'],
+                                 text=data_frame[data_frame['sample_status']
+                                                 == i]['ID'],
                                  mode='markers',
-                                 opacity=0.7,
-                                 marker={
-                                     'size': 10,
-                                     'line': {'width': 0.5, 'color': 'white'}
-                                 },
                                  name=i
-                             ) for i in df.sample_status.unique()
+                             ) for i in data_frame.sample_status.unique()
                          ],
                          'layout': dict(
                              title={
@@ -347,28 +353,107 @@ def generate_cr_het_plot():
                              legend=dict(orientation='v', y=0.5),
                              hovermode='closest',
                              autosize=True,
-
-
+                             width=500,
+                             height=500
                          )
                      })
 
 
-def generate_fail_table():
+def generate_failed_samples_table():
     '''
-    lists fail samples
+    Generates table of failed samples
     '''
+
+    columns = [
+        "Sample ID",
+        "Cohort",
+        "Pico green",
+        "CV%",
+        "Heterozygosity rate",
+        "dish QC",
+        "Sex check",
+        "Cluster CR",
+        "BP failure mode",
+        "Sample status"
+    ]
+
+    d = df[[
+        "ID",
+        "cohort",
+        "pico_green",
+        "CV%",
+        "het_rate",
+        "dQC",
+        "Cluster_CR",
+        "Failure_Mode",
+        "sex_check",
+        "sample_status",
+    ]]
+
+    d = d.rename(columns={
+        "ID": "Sample ID",
+        "cohort": "Cohort",
+        "pico_green": "Pico green",
+        "CV%": "CV%",
+        "dQC": "dish QC",
+        "het_rate": "Heterozygosity rate",
+        "Cluster_CR": "Cluster CR",
+        "sex_check": "Sex check",
+        "Failure_Mode": "BP failure mode",
+        "sample_status": "Sample status"})
+
     return dash_table.DataTable(
         id='table',
-        columns=[
-            {'name': 'Column 1', 'id': 'column1'},
-            {'name': 'Column 2', 'id': 'column2'},
-            {'name': 'Column 3', 'id': 'column3'},
-            {'name': 'Column 4', 'id': 'column4'},
-            {'name': 'Column 5', 'id': 'column5'}]
+        columns=[{"name": i, "id": i} for i in columns],
+        data=d.sort_values(
+            by=['Cohort']).to_dict('records'),
+        style_cell={
+            'padding': '5px',
+            'textAlign': 'center',
+            'border': '1px solid black'
+        },
+        style_header={
+            'backgroundColor': 'rgb(230, 230, 230)',
+            'fontWeight': 'bold',
+            'border': '1px solid black'
+        },
+        style_data_conditional=[
+            {'if': {
+                'column_id': 'Sex check',
+                'filter_query': '{Sex check} eq "Fail"'
+            },
+                'backgroundColor': '#ff9b9e',
+                'fontWeight': 'bold'},
+            {
+                'if': {
+                    'column_id': 'dish QC',
+                    'filter_query': '{dish QC} < 0.82'
+                },
+                'backgroundColor': '#ff9b9e',
+                'fontWeight': 'bold'
+            },
+            {
+                'if': {
+                    'column_id': 'Cluster CR',
+                    'filter_query': '{Cluster CR} < 97.0'
+                },
+                'backgroundColor': '#ff9b9e',
+                'fontWeight': 'bold'
+            },
+
+        ],
+        editable=True,
+        filter_action='native',
+        filter_query='{Sample status} eq "Fail"',
+        sort_action="native",
+        sort_mode="single",
+        column_selectable="multi",
+        selected_columns=[],
+        selected_rows=[],
+        page_action="native",
+        page_current=0,
+        page_size=30
     )
-
-
-, and then send in a dict of your pan
 
 
 def generate_qc_panel_tab():
@@ -379,13 +464,26 @@ def generate_qc_panel_tab():
     return html.Div([
         dbc.Container([
             dbc.Row([
-                dbc.Col(generate_dqc_CR_plot()),
-                dbc.Col(generate_cr_het_plot())
+                dbc.Col(generate_dqc_CR_plot(df)),
+                dbc.Col(generate_cr_het_plot(df))
             ])
-        ], fluid=True)
+        ])
     ]), html.Div([
-        generate_fail_table()
-    ])
+        html.H4(children='Table browser'),
+        dbc.Container([
+            generate_failed_samples_table()
+        ], fluid=True)
+    ], style={'padding-top': '15px',
+              'padding-bottom': '15px',
+              'padding-right': '30px',
+              'padding-left': '30px'
+              },
+    ), html.Div(
+        id='datatable-interactivity-container')
+
+####################################
+# Main App
+####################################
 
 
 # Server
@@ -407,6 +505,7 @@ app.layout = html.Div(children=[
 
 ])
 
+app.config.suppress_callback_exceptions = True
 # Callbacks
 @app.callback(Output('tabs-content', 'children'),
               [Input('tabs', 'value')])
@@ -415,6 +514,106 @@ def render_content(tab):
         return generate_sample_panel_tab()
     if tab == 'tab-2':
         return generate_qc_panel_tab()
+
+
+@app.callback(
+    Output('datatable-interactivity-container', "children"),
+    [Input('table', "derived_virtual_data"),
+     Input('table', "derived_virtual_selected_rows")])
+def update_graphs(rows, derived_virtual_selected_rows):
+
+    if derived_virtual_selected_rows is None:
+        derived_virtual_selected_rows = []
+
+    dt = df[[
+        "ID",
+        "cohort",
+        "pico_green",
+        "CV%",
+        "het_rate",
+        "dQC",
+        "Cluster_CR",
+        "Failure_Mode",
+        "sex_check",
+        "sample_status",
+    ]]
+
+    dt = dt.rename(columns={
+        "ID": "Sample ID",
+        "cohort": "Cohort",
+        "pico_green": "Pico green",
+        "CV%": "CV%",
+        "dQC": "dish QC",
+        "het_rate": "Heterozygosity rate",
+        "Cluster_CR": "Cluster CR",
+        "sex_check": "Sex check",
+        "Failure_Mode": "BP failure mode",
+        "sample_status": "Sample status"})
+
+    dff = dt if rows is None else pd.DataFrame(rows)
+    return [
+        dbc.Container([
+            dbc.Row([
+                dbc.Col(
+                    dcc.Graph(id='dqc_v_cr_plot',
+                              figure={
+                                  'data': [
+                                      dict(
+                                          x=dff[dff['Sample status']
+                                                == i]['dish QC'],
+                                          y=dff[dff['Sample status']
+                                                == i]['Cluster CR'],
+                                          text=dff[dff['Sample status']
+                                                   == i]['Sample ID'],
+                                          mode='markers',
+                                          name=i
+                                      ) for i in dff['Sample status'].unique()
+                                  ],
+                                  'layout': dict(
+                                      title={
+                                          'text': 'Cluster call rate vs. Dish QC'},
+                                      xaxis={'title': 'Dish QC'},
+                                      yaxis={'title': 'Cluster call rate (%)'},
+                                      legend=dict(orientation='v', y=0.5),
+                                      hovermode='closest',
+                                      width=500,
+                                      height=500,
+                                      autosize=True
+                                  )
+                              })),
+                dbc.Col(dcc.Graph(id='cr_v_het_plot',
+                                  figure={
+                                      'data': [
+                                          dict(
+                                              x=dff[dff['Sample status']
+                                                    == i]['Heterozygosity rate'],
+                                              y=dff[dff['Sample status']
+                                                    == i]['Cluster CR'],
+                                              text=dff[dff['Sample status']
+                                                       == i]['Sample ID'],
+                                              mode='markers',
+                                              name=i
+                                          ) for i in dff['Sample status'].unique()
+                                      ],
+                                      'layout': dict(
+                                          title={
+                                              'text': 'Cluster call rate vs. Heterozygosity'},
+                                          xaxis={
+                                              'title': 'Heterozygosity (%)'},
+                                          yaxis={
+                                              'title': 'Cluster call rate (%)'},
+                                          legend=dict(orientation='v', y=0.5),
+                                          hovermode='closest',
+                                          autosize=True,
+                                          width=500,
+                                          height=500
+                                      )
+                                  })
+
+                        )
+            ]),
+        ])
+    ]
 
 
 if __name__ == '__main__':
