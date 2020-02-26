@@ -103,7 +103,7 @@ def generate_header():
     '''
     makes the page header
     '''
-    LOGO = "/static/img/BGC_logo_only.50px.jpg"
+    LOGO = "/static/img/BGC_logo_only.50px.png"
 
     return dbc.Navbar(
         [
