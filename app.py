@@ -14,7 +14,7 @@ from dash.dependencies import Input, Output, State
 external_stylesheets = [dbc.themes.BOOTSTRAP]
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-
+app.title = 'BGC Validation Dashboard'
 #######################################
 # Data inputting
 #######################################
